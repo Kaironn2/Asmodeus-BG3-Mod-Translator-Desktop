@@ -133,3 +133,7 @@ dmypy.json
 
 # External tools
 /external_tools/lslib
+
+# Mod files
+*.zip
+*.pak
