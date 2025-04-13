@@ -4,40 +4,10 @@ from sqlmodel.sql.expression import Select
 
 from ..helpers import DatabaseHelper
 from ..models import Dictionary
+from ..repositories.mod_repository import ModRepository
 
 
 class DictionaryRepository:
-
-    @staticmethod
-    def _get_ordered_inputs(
-        source_lang: str, 
-        target_lang: str, 
-        source_text: str = None,
-        target_text: str = None,
-    ) -> List[str]:
-
-        db_lang1, db_lang2 = sorted([source_lang, target_lang])
-
-        if source_lang == db_lang1:
-
-            if target_text is None:
-                return db_lang1, db_lang2, source_text
-            
-            if source_text is None:
-                return db_lang1, db_lang2
-            
-            return db_lang1, db_lang2, source_text, target_text
-            
-        if source_lang == db_lang2:
-            
-            if target_text is None:
-                return db_lang1, db_lang2, source_text
-            
-            if source_text is None:
-                return db_lang1, db_lang2
-            
-            return db_lang1, db_lang2, source_text, target_text
-            
     
     @classmethod
     def find_translations_by_text(
@@ -47,11 +17,7 @@ class DictionaryRepository:
         source_text: str,
     ) -> Select[Dictionary]:
         
-        db_lang1, db_lang2, source_text = cls._get_ordered_inputs(
-            source_lang=source_lang,
-            target_lang=target_lang,
-            source_text=source_text,
-        )
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
 
         return select(Dictionary).where(
             Dictionary.language1 == db_lang1,
@@ -68,10 +34,7 @@ class DictionaryRepository:
         uid: str,
     ) -> Select[Dictionary]:
         
-        db_lang1, db_lang2 = cls._get_ordered_inputs(
-            source_lang=source_lang,
-            target_lang=target_lang,
-        )
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
 
         return select(Dictionary).where(
             Dictionary.language1 == db_lang1,
@@ -89,11 +52,7 @@ class DictionaryRepository:
         mod_name: str,
     ) -> Select[Dictionary]:
         
-        db_lang1, db_lang2 = cls._get_ordered_inputs(
-            source_lang=source_lang,
-            target_lang=target_lang,
-            source_text=source_text,
-        )
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
 
         return select(Dictionary).where(
             Dictionary.language1 == db_lang1,
@@ -115,9 +74,14 @@ class DictionaryRepository:
         uid: Optional[str] = None,
     ) -> None:
         
-        db_lang1, db_lang2, text1, text2 = cls._get_ordered_inputs(
-            source_lang, target_lang, source_text, target_text
-        )
+        ModRepository.add_mod(session=session, name=mod_name)
+        
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
+
+        if target_lang == db_lang1:
+            text1, text2 = target_text, source_text
+        text1, text2 = source_text, target_text
+
 
         if uid:
             statement = cls.find_translations_by_uid(source_lang, target_lang, uid)
@@ -130,7 +94,7 @@ class DictionaryRepository:
 
         statement = cls.find_translations_by_mod(source_lang, target_lang, source_text, mod_name)
         result = session.exec(statement).first()
-        if result:
+        if result and not uid:
             result.text_language1 = text1
             result.text_language2 = text2
             session.commit()
