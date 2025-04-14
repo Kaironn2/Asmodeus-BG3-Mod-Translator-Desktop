@@ -2,12 +2,29 @@ from typing import Optional, List
 from sqlmodel import Session, select
 from sqlmodel.sql.expression import Select
 
+from src.helpers.fuzzy_matcher import SimilarFinder
+
 from ..helpers import DatabaseHelper
 from ..models import Dictionary
 from ..repositories.mod_repository import ModRepository
 
 
 class DictionaryRepository:
+
+    @classmethod
+    def find_all_translations_by_language(
+        cls,
+        source_lang: str,
+        target_lang: str,
+    ) -> Select[Dictionary]:
+        
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
+
+        return select(Dictionary).where(
+            Dictionary.language1 == db_lang1,
+            Dictionary.language2 == db_lang2,
+        ).order_by(Dictionary.text_language1)
+
     
     @classmethod
     def find_translations_by_text(
@@ -110,3 +127,24 @@ class DictionaryRepository:
         )
         DatabaseHelper.add_and_commit(session, new_entry)
         return
+    
+
+    @classmethod
+    def get_similar_translations(
+        cls,
+        session: Session,
+        source_lang: str,
+        target_lang: str,
+    ) -> List[tuple[str, str]]:
+        
+        db_lang1, db_lang2 = sorted([source_lang, target_lang])
+        results = session.exec(
+            cls.find_all_translations_by_language(db_lang1, db_lang2)
+        )
+
+        db_texts = {result.text_language1: result.text_language2 for result in results}
+
+        return SimilarFinder.search_similar_texts(
+            source_text=source_lang,
+            db_texts=db_texts,
+        )
