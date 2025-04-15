@@ -130,11 +130,12 @@ class DictionaryRepository:
     
 
     @classmethod
-    def get_similar_translations(
+    def find_similar_translations(
         cls,
         session: Session,
         source_lang: str,
         target_lang: str,
+        source_text: str,
     ) -> List[tuple[str, str]]:
         
         db_lang1, db_lang2 = sorted([source_lang, target_lang])
@@ -144,7 +145,10 @@ class DictionaryRepository:
 
         db_texts = {result.text_language1: result.text_language2 for result in results}
 
-        return SimilarFinder.search_similar_texts(
-            source_text=source_lang,
+        testar = SimilarFinder.search_similar_texts(
+            source_text=source_text,
             db_texts=db_texts,
         )
+
+        print(testar)
+        return testar
