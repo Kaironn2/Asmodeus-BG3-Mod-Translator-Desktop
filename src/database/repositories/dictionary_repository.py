@@ -29,18 +29,24 @@ class DictionaryRepository:
     @classmethod
     def find_translations_by_text(
         cls,
+        session: Session,
         source_lang: str,
         target_lang: str,
         source_text: str,
-    ) -> Select[Dictionary]:
+    ) -> str:
         
         db_lang1, db_lang2 = sorted([source_lang, target_lang])
 
-        return select(Dictionary).where(
+        statement = select(Dictionary).where(
             Dictionary.language1 == db_lang1,
             Dictionary.language2 == db_lang2,
             Dictionary.text_language1 == source_text,
         )
+
+        result = session.exec(statement).first()
+        if result:
+            return result.text_language2
+        return None
     
 
     @classmethod
@@ -150,5 +156,4 @@ class DictionaryRepository:
             db_texts=db_texts,
         )
 
-        print(testar)
         return testar

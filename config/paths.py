@@ -5,7 +5,9 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 DATA = ROOT / 'data'
+
 TEMP = DATA / 'temp'
+TEMP_UNPACKED = TEMP / 'unpacked'
 
 
 EXTERNAL_TOOLS = ROOT / 'external_tools'
@@ -16,3 +18,4 @@ DIVINE = LSLIB / 'Divine.exe'
 MODS = ROOT / 'mods'
 UNPACKED = MODS / 'unpacked'
 PACKED = MODS / 'packed'
+TRANSLATED = MODS / 'translated'
