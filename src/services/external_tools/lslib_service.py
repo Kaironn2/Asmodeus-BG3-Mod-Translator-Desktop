@@ -2,62 +2,91 @@ import subprocess
 from pathlib import Path
 import shutil
 
-from config.paths import DIVINE, UNPACKED, PACKED, TEMP
+from sqlmodel import Session
+
+from config import paths
+from src.database.repositories.language_repository import LanguageRepository
+from src.helpers.validators import Validators
 from src.utils.dir_utils import DirUtils
 from src.utils.zip_utils import ZipUtils
 
 
 class LslibService:
 
-    @staticmethod
-    def _list_translation_files(folder: Path, language: str) -> list[Path]:
-        xml_files = DirUtils.list_files_by_extension(folder, 'xml')
-        loc_files = []
-        for xml in xml_files:
-            if xml.parent.name == language:
-                loc_files.append(xml)
+    @classmethod
+    def mod_unpack(
+        cls, mod_path: Path, mod_name: str, just_localization: bool, 
+        session: Session, source_language: str, target_language: str
+        ) -> tuple[list[Path], Path]:
+
+        paths.TEMP_UNPACKED.mkdir(exist_ok=True, parents=True)
+
+        mod_path = Path(mod_path)
+
+        if mod_path.suffix == '.zip':
+            ZipUtils.unpack_zip_file(mod_path, paths.TEMP_UNPACKED)
+            mod_path = DirUtils.list_files_by_extension(paths.TEMP_UNPACKED, 'pak')[0]
+
+        if mod_path.suffix != '.pak':
+            raise ValueError(f'Invalid file type: {mod_path.suffix}. Expected .pak or .zip.')
         
-        lsx_files = DirUtils.list_files_by_extension(folder, 'lsx')
-        for lsx in lsx_files:
-            if lsx.name == 'meta.lsx':
-                loc_files.append(lsx)
-                break
+        if not just_localization:
+            cls._divine_unpack(mod_path, paths.UNPACKED / mod_name)
+            shutil.rmtree(paths.TEMP_UNPACKED)
+            return
 
-        return loc_files
+        cls._divine_unpack(mod_path, paths.TEMP_UNPACKED)
+        xml_files, meta_file = cls._list_localization_files(paths.TEMP_UNPACKED, source_language, session)
+
+        target_language = LanguageRepository.find_language_by_code(session, target_language).replace(' ', '')
+
+        mod_name = Validators.validate_mod_name(mod_name)
+
+        output_path = paths.UNPACKED / mod_name / 'Mods' / mod_name
+        xml_outputs = []
+        for xml in xml_files:
+            xml_name = str(xml.name).replace('.loca', '')
+            xml_output_path = output_path / 'Localization' / target_language / xml_name
+            xml_output_path.parent.mkdir(parents=True, exist_ok=True)
+            xml_outputs.append(xml_output_path)
+            shutil.copy2(xml, xml_output_path)
+        
+        meta_output_file = output_path / 'meta.lsx'
+        shutil.copy2(meta_file, meta_output_file)
+        shutil.rmtree(paths.TEMP_UNPACKED)
+        return xml_outputs, meta_output_file
+    
+
+    @classmethod
+    def mod_pack(cls, input_folder: Path, output_folder: Path):
+        input_folder = Path(input_folder)
+        output_folder = Path(output_folder)
+
+        if not input_folder.exists() or not input_folder.is_dir():
+            raise ValueError(f'Invalid input folder: {input_folder}')
+
+        if not output_folder.exists() or not output_folder.is_dir():
+            raise ValueError(f'Invalid output folder: {output_folder}')
+
+        mod_name = input_folder.name
+        mod_path = output_folder / f'{mod_name}.pak'
+
+        cls._divine_pack(input_folder, mod_path)
+        return mod_path
 
 
-    @staticmethod
-    def unpack_pak_file(file_path: Path, temp: bool = False) -> None:
-        file_path = Path(file_path)
-
-        if file_path.suffix == '.zip':
-            temp_folder = TEMP / (str(file_path.stem) + '_zip')
-            temp_folder.mkdir(parents=True, exist_ok=True)
-            ZipUtils.unpack_zip_file(file_path, temp_folder)
-            file_path = DirUtils.list_files_by_extension(temp_folder, 'pak')[0]
-            clear_temp = True
-
-        if file_path.suffix != '.pak':
-            raise ValueError(f'Invalid file type: {file_path.suffix}. Expected .pak or .zip.')
-
-
-        output_folder = UNPACKED / file_path.stem
-        if temp:
-            output_folder = TEMP / file_path.stem
-        output_folder.mkdir(parents=True, exist_ok=True)
-
+    @classmethod
+    def _divine_unpack(cls, mod_path: Path, output_folder: Path):
         command = [
-            DIVINE, 
+            paths.DIVINE, 
             '-g', 'bg3', 
             '-a', 'extract-package', 
-            '-s', file_path, 
-            '-d', output_folder
+            '-s', mod_path, 
+            '-d', output_folder,
         ]
 
         try:
             subprocess.run(command, check=True)
-            if clear_temp:
-                shutil.rmtree(temp_folder)
 
         except subprocess.CalledProcessError as e:
             print(f'An error occurred while unpacking the pak file: {e}')
@@ -68,27 +97,41 @@ class LslibService:
             raise
 
     
-    @staticmethod
-    def unpack_pak_localization_files(file_path: Path, source_language: str) -> list[Path]:
-        file_path = Path(file_path)
-        LslibService.unpack_pak_file(file_path, temp=True)
+    @classmethod
+    def _divine_pack(cls, mod_folder: Path, output_folder: Path):
+        command = [
+            paths.DIVINE, 
+            '-g', 'bg3', 
+            '-a', 'create-package', 
+            '-s', mod_folder, 
+            '-d', output_folder,
+        ]
 
-        folder_name = file_path.stem
-        temp_folder = TEMP / folder_name
-        print(temp_folder)
-        output_folder = UNPACKED / folder_name
-        output_folder.mkdir(parents=True, exist_ok=True)
+        try:
+            subprocess.run(command, check=True)
 
-        loc_files = LslibService._list_translation_files(temp_folder, source_language)
+        except subprocess.CalledProcessError as e:
+            print(f'An error occurred while packing the pak file: {e}')
+            raise
 
-        for file in loc_files:
-            relative_path = file.relative_to(temp_folder)
-            dest_path = output_folder / relative_path
+        except FileNotFoundError as e:
+            print(f'Divine executable not found: {e}')
+            raise
 
-            dest_path.parent.mkdir(parents=True, exist_ok=True)
-
-            print(f'[DEBUG] Copiando {file} -> {dest_path}')
-            shutil.copy2(file, dest_path)
+    
+    @classmethod
+    def _list_localization_files(cls, folder: Path, source_language: str, session: Session) -> tuple[list[Path], Path]:
+        source_language = LanguageRepository.find_language_by_code(session, source_language)
         
-        shutil.rmtree(temp_folder)
-        return loc_files
+        xml_files = DirUtils.list_files_by_extension(folder, 'xml')
+        loc_files = []
+        for xml in xml_files:
+            if xml.parent.name == source_language:
+                loc_files.append(xml)
+        
+        lsx_files = DirUtils.list_files_by_extension(folder, 'lsx')
+        for lsx in lsx_files:
+            if lsx.name == 'meta.lsx':
+                meta_file = lsx
+
+        return loc_files, meta_file

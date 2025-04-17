@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 
 
-class XmlUtils:
+class XmlParser:
 
     @staticmethod
     def xml_to_dataframe(xml_path: str) -> pd.DataFrame:

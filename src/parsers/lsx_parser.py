@@ -50,12 +50,12 @@ class LsxParser:
     @classmethod
     def create_meta(
         cls,
+        mod_name: str,
         meta_file_path: Union[str, Path],
         meta_output_path: Union[str, Path],
         author: str,
         description: str,
-        target_lang: str,
-    ) -> Path:
+    ) -> str:
 
         tree = cls.load_lsx(meta_file_path)
         root = tree.getroot()
@@ -66,10 +66,10 @@ class LsxParser:
         
         
         attr = cls.find_attribute_by_id(module_info, 'Name')
-        mod_name = attr.get('value')
 
         updates = {
-            'Name': f'{mod_name}_{target_lang}',
+            'Name': mod_name,
+            'Folder': mod_name,
             'Author': author,
             'Description': description,
             'UUID': str(uuid4()),
@@ -84,4 +84,6 @@ class LsxParser:
                 else:
                     print(f'Atributo {attr_id} não encontrado')
 
-        return cls.save_lsx(tree, meta_output_path)
+        cls.save_lsx(tree, meta_output_path)
+
+        return mod_name
