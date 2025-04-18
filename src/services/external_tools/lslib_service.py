@@ -1,6 +1,7 @@
-import subprocess
 from pathlib import Path
+import subprocess
 import shutil
+import zipfile
 
 from sqlmodel import Session
 
@@ -40,7 +41,6 @@ class LslibService:
 
         target_language = LanguageRepository.find_language_by_code(session, target_language).replace(' ', '')
 
-        mod_name = Validators.validate_mod_name(mod_name)
 
         output_path = paths.UNPACKED / mod_name / 'Mods' / mod_name
         xml_outputs = []
@@ -61,6 +61,7 @@ class LslibService:
     def mod_pack(cls, input_folder: Path, output_folder: Path):
         input_folder = Path(input_folder)
         output_folder = Path(output_folder)
+        output_folder.mkdir(exist_ok=True, parents=True)
 
         if not input_folder.exists() or not input_folder.is_dir():
             raise ValueError(f'Invalid input folder: {input_folder}')
@@ -70,8 +71,13 @@ class LslibService:
 
         mod_name = input_folder.name
         mod_path = output_folder / f'{mod_name}.pak'
+        zip_path = output_folder / f'{mod_name}.zip'
 
         cls._divine_pack(input_folder, mod_path)
+
+        with zipfile.ZipFile(zip_path, 'w') as zipf:
+            zipf.write(mod_path, arcname=mod_path.name)
+
         return mod_path
 
 
