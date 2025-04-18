@@ -48,6 +48,7 @@ class OpenAITranslationPipeline:
         self._create_folder_structure()
         self._create_meta()
         self._translate()
+        self._mod_pack()
 
     
     def _mod_unpack(self) -> None:
@@ -61,8 +62,16 @@ class OpenAITranslationPipeline:
         )
 
     
+    def _mod_pack(self) -> None:
+        paths.PACKED.mkdir(exist_ok=True, parents=True)
+        LslibService.mod_pack(
+            input_folder=paths.TRANSLATED / self.mod_name,
+            output_folder=paths.PACKED / Validators.validate_mod_name(self.mod_name),
+        )
+
+    
     def _create_folder_structure(self) -> None:
-        self.mod_translated_path = paths.TRANSLATED / self.mod_name / 'Mods'
+        self.mod_translated_path = paths.TRANSLATED / self.mod_name / 'Mods' / self.mod_name
         self.mod_localization_path = self.mod_translated_path / 'Localization' / str(self.target_language_name).replace(' ', '')
         self.mod_localization_path.mkdir(parents=True, exist_ok=True)
 
@@ -129,7 +138,7 @@ class OpenAITranslationPipeline:
                 uid=contentuid,
             )
 
-            row['content'] = target_text
+            localization.at[idx, 'text'] = target_text
 
             counter += 1
             print(f'Translation progress: {counter}/{total_rows}')
