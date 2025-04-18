@@ -137,8 +137,7 @@ dmypy.json
 # Mod files
 *.zip
 *.pak
-/mods/unpacked
-/mods/packed
+/mods
 
 # db
 *.db
