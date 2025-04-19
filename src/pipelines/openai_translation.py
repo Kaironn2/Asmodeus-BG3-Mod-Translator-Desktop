@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 from sqlmodel import Session
 
-from config import paths
+from src.config import paths
 from src.helpers.validators import Validators
 from src.parsers.lsx_parser import LsxParser
 from src.parsers.xml_parser import XmlParser
@@ -89,6 +89,11 @@ class OpenAITranslationPipeline:
     def _translate(self) -> None:
         for xml_path in self.xml_paths:
             localization = XmlParser.xml_to_dataframe(xml_path)
+            
+            if localization.empty:
+                print(f'{xml_path.name} não possui content.')
+                xml_path.unlink()
+                continue
             
             try:
                 self._translate_xml_files(localization)
