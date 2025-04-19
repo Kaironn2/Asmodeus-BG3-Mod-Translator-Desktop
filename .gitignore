@@ -131,9 +131,6 @@ dmypy.json
 # VS Code settings
 .vscode/
 
-# External tools
-/external_tools/lslib
-
 # Mod files
 *.zip
 *.pak
@@ -141,3 +138,6 @@ dmypy.json
 
 # db
 *.db
+
+# project configs
+/configs/

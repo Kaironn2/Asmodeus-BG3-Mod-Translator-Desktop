@@ -5,7 +5,7 @@ import zipfile
 
 from sqlmodel import Session
 
-from config import paths
+from src.config import paths
 from src.database.repositories.language_repository import LanguageRepository
 from src.helpers.validators import Validators
 from src.utils.dir_utils import DirUtils
@@ -33,6 +33,7 @@ class LslibService:
         
         if not just_localization:
             cls._divine_unpack(mod_path, paths.UNPACKED / mod_name)
+            input()
             shutil.rmtree(paths.TEMP_UNPACKED)
             return
 
@@ -41,8 +42,8 @@ class LslibService:
 
         target_language = LanguageRepository.find_language_by_code(session, target_language).replace(' ', '')
 
-
         output_path = paths.UNPACKED / mod_name / 'Mods' / mod_name
+        output_path.mkdir(parents=True, exist_ok=True)
         xml_outputs = []
         for xml in xml_files:
             xml_name = str(xml.name).replace('.loca', '')
@@ -130,6 +131,7 @@ class LslibService:
         source_language = LanguageRepository.find_language_by_code(session, source_language)
         
         xml_files = DirUtils.list_files_by_extension(folder, 'xml')
+        print('XML files:', xml_files)
         loc_files = []
         for xml in xml_files:
             if xml.parent.name == source_language:
