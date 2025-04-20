@@ -1,13 +1,14 @@
+from pathlib import Path
+
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, 
-    QComboBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, 
 )
 from PySide6.QtCore import Qt, QThread, Signal
 
 from src.ui.components.drag_drop import DragDropWidget
 from src.ui.components.language_combobox import LanguageComboBox
 
-from src.config.config_manager import load_openai_key, save_openai_key
+from src.config.config_manager import ConfigManager
 from src.database.connection import get_session
 from src.database.repositories.language_repository import LanguageRepository
 from src.pipelines.openai_translation import OpenAITranslationPipeline
@@ -57,7 +58,10 @@ class OpenaiView(QWidget):
         left_layout = QVBoxLayout()
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(0)
-        self.drag_drop = DragDropWidget()
+        self.drag_drop = DragDropWidget(
+            accepted_extensions=['.zip', '.pak', '.xml'], 
+            description_text='Drag and drop a ZIP,\n PAK or XML file here\nor click to select a file'
+        )
         self.drag_drop.file_dropped.connect(self.on_file_dropped)
         self.drag_drop.setFixedHeight(240)
         self.drag_drop.setMinimumWidth(240)
@@ -84,9 +88,16 @@ class OpenaiView(QWidget):
         self.openai_key_input.setPlaceholderText('OpenAI API Key')
         self.openai_key_input.setFixedHeight(40)
         self.openai_key_input.setMinimumWidth(240)
+        self.openai_key_input.setEchoMode(QLineEdit.Password)
         right_layout.addWidget(self.openai_key_input)
 
-        self.openai_key_input.setText(load_openai_key())
+        self.openai_key_input.setText(ConfigManager.load_openai_key())
+
+        self.mod_name_input = QLineEdit()
+        self.mod_name_input.setPlaceholderText('Mod Name')
+        self.mod_name_input.setFixedHeight(40)
+        self.mod_name_input.setMinimumWidth(240)
+        right_layout.addWidget(self.mod_name_input)
 
         right_widget = QWidget()
         right_widget.setLayout(right_layout)
@@ -95,6 +106,13 @@ class OpenaiView(QWidget):
 
         self.source_lang_combo = LanguageComboBox(languages=languages)
         self.target_lang_combo = LanguageComboBox(languages=languages)
+
+        languages_cache = ConfigManager.load_last_languages()
+        if len(languages_cache) == 2:
+            source_lang, target_lang = languages_cache
+            self.source_lang_combo.setCurrentText(source_lang)
+            self.target_lang_combo.setCurrentText(target_lang)
+
 
         lang_row.addWidget(self.source_lang_combo)
         lang_row.addWidget(self.target_lang_combo)
@@ -117,6 +135,14 @@ class OpenaiView(QWidget):
         self.progress_text = QTextEdit()
         self.progress_text.setReadOnly(True)
         self.progress_text.setPlaceholderText('Waiting for translation...')
+        self.progress_text.setStyleSheet("""
+            background: #18191A;
+            color: #fff;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+        """)
         bottom_row_layout.addWidget(self.progress_text)
 
         main_layout.addWidget(top_row_widget)
@@ -137,10 +163,14 @@ class OpenaiView(QWidget):
         self.progress_text.append('Translation finished!')
 
     def on_start_translation(self):
-        save_openai_key(self.openai_key_input.text())
+        ConfigManager.save_openai_key(self.openai_key_input.text())
+        ConfigManager.save_last_languages(
+            self.source_lang_combo.currentText(),
+            self.target_lang_combo.currentText()
+        )
         source_lang = self.source_lang_combo.currentText()
         target_lang = self.target_lang_combo.currentText()
-        mod_name = 'Cosmic Sorcery'
+        mod_name = self.mod_name_input.text()
         author = 'Kaironn2'
         description = f'{mod_name} ptbr translation'
 
@@ -149,13 +179,14 @@ class OpenaiView(QWidget):
             target_lang_code = LanguageRepository.find_language_by_name(session=session, name=target_lang)
 
             openai_translation_pipeline = OpenAITranslationPipeline(
+                openai_key=ConfigManager.load_openai_key(),
                 mod_name=mod_name,
                 session=session,
                 source_language=source_lang_code,
                 target_language=target_lang_code,
                 author=author,
                 description=description,
-                mod_path=self.file_path,
+                mod_path=Path(self.file_path),
             )
 
             self.worker = OpenaiPipelineWorker(openai_translation_pipeline)

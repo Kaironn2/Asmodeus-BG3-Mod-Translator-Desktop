@@ -4,7 +4,7 @@
 
 ### 📟 Short Description
 
-Desktop application to translate Baldur's Gate 3 mods. Uses LSLib to handle `.pak` files, translates `.xml` localization files using OpenAI or Google Translator, and stores translations in a SQLite database. Built with Flet.
+Desktop application to translate Baldur's Gate 3 mods. Uses LSLib to handle `.pak` files, translates `.xml` localization files using OpenAI or Google Translator, and stores translations in a SQLite database. Built with PySide6.
 
 ### 📄 Long Description
 
@@ -31,7 +31,12 @@ The app supports multiple translation methods:
    - `.xml` files for Mod.io projects.
    - Fully zipped `.pak` for Nexus Mods.
 
-The interface is developed with **Flet**, and this desktop version is a fast-track implementation of a more complete **web-based version** being built using **Django** and **Vue.js**.
+The interface is developed with **PySide6**, and this desktop version is a fast-track implementation of a more complete **web-based version** being built using **Django** and **Vue.js**.
+
+### 📚 Acknowledgements
+
+This project uses [LSLib](https://github.com/Norbyte/lslib) by **Norbyte** for handling `.pak` files in Baldur's Gate 3.  
+LSLib is an open-source project licensed under the MIT License.
 
 ---
 
@@ -39,7 +44,7 @@ The interface is developed with **Flet**, and this desktop version is a fast-tra
 
 ### 📟 Descrição Curta
 
-Aplicativo desktop para traduzir mods de Baldur's Gate 3. Utiliza LSLib para lidar com arquivos `.pak`, traduz arquivos `.xml` com OpenAI ou Google Translator e armazena traduções em banco de dados SQLite. Interface feita com Flet.
+Aplicativo desktop para traduzir mods de Baldur's Gate 3. Utiliza LSLib para lidar com arquivos `.pak`, traduz arquivos `.xml` com OpenAI ou Google Translator e armazena traduções em banco de dados SQLite. Interface feita com PySide6.
 
 ### 📄 Descrição Longa
 
@@ -66,7 +71,9 @@ A tradução dos textos pode ser feita de diferentes formas:
    - `.xml`, para uso em projetos da Mod.io.
    - `.pak` compactado, pronto para o Nexus Mods.
 
-A interface é feita com **Flet**. Esta versão desktop é uma implementação inicial de um projeto maior e futuro: uma aplicação web feita em **Django** e **Vue.js**.
+A interface é feita com **PySide6**. Esta versão desktop é uma implementação inicial de um projeto maior e futuro: uma aplicação web feita em **Django** e **Vue.js**.
 
----
+### 📚 Agradecimentos
 
+Este projeto utiliza o [LSLib](https://github.com/Norbyte/lslib), desenvolvido por **Norbyte**, para manipular arquivos `.pak` do Baldur's Gate 3.  
+O LSLib é um projeto open-source licenciado sob a licença MIT.

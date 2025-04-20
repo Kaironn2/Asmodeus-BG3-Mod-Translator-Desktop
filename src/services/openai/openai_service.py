@@ -1,16 +1,14 @@
 import os
 from typing import Dict, List
-from dotenv import load_dotenv
 import requests
 
 
 class OpenAIService:
     
-    def __init__(self, model: str = 'gpt-4o-mini'):
+    def __init__(self, openai_key, model: str = 'gpt-4o-mini'):
 
-        load_dotenv()
         
-        self.api_key = os.getenv('OPENAI_KEY')
+        self.api_key = openai_key
         if not self.api_key:
             raise ValueError('Chave de API da OpenAI não definida no .env.')
 

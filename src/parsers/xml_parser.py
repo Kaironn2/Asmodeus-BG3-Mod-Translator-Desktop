@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 import xml.etree.ElementTree as ET
 
 import pandas as pd
@@ -27,6 +27,8 @@ class XmlParser:
 
     @staticmethod
     def dataframe_to_xml(df: pd.DataFrame, output_path: str) -> None:
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         
         root = ET.Element('contentList')
 
