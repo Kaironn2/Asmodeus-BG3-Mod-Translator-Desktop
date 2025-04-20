@@ -14,6 +14,7 @@ class NavButton(QPushButton):
                 background: transparent;
                 border: none;
                 font-size: 16px;
+                font-weight: bold;
                 padding: 8px 16px 2px 16px;
                 border-radius: 0px;
             }
@@ -39,9 +40,10 @@ class TopNavBar(QWidget):
         self.on_nav_selected = on_nav_selected
 
         nav_items = [
-            ('OpenAI (GPT)', 'openai_translation'),
-            ('Google Translator', 'google_translator'),
-            ('DeepL', 'deepl')
+            ('OPENAI (GPT)', 'openai_translation'),
+            ('MANUAL', 'manual_translation'),
+            ('GOOGLE TRANSLATOR', 'google_translator'),
+            ('DEEPL', 'deepl')
         ]
 
         for text, key in nav_items:

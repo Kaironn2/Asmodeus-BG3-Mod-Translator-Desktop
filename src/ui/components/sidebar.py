@@ -17,8 +17,8 @@ class Sidebar(QWidget):
         self._add_section(
             title='Translation',
             options=[
-                ('Translate', 'translate', 'src/ui/assets/translation_blue_icon_vetorized.ico'),
-                ('Dictionaries', 'dictionaries', 'src/ui/assets/dictionary_icon_orange_vetorized.ico'),
+                ('Translate', 'translate', 'src/ui/assets/translation_blue_icon.ico'),
+                ('Dictionaries', 'dictionaries', 'src/ui/assets/dictionary_icon_blue.ico'),
             ]
         )
         self._add_separator()
@@ -27,8 +27,8 @@ class Sidebar(QWidget):
         self._add_section(
             title='Tools',
             options=[
-                ('Extract Mod', 'extract_mod', 'src/ui/assets/extract_icon_vetorized.ico'),
-                ('Create Mod Package', 'create_mod_package', 'src/ui/assets/create_package_icon_vetorized.ico'),
+                ('Extract Mod', 'extract_mod', 'src/ui/assets/extract_icon.ico'),
+                ('Create Mod Package', 'create_mod_package', 'src/ui/assets/create_package_icon.ico'),
             ]
         )
         self._add_separator()
@@ -37,10 +37,10 @@ class Sidebar(QWidget):
         self._add_section(
             title='Configs',
             options=[
-                ('Settings', 'settings', 'src/ui/assets/settings.png'),
-                ('About', 'about', 'src/ui/assets/about.png'),
-                ('Check for Updates', 'check_for_updates', 'src/ui/assets/update.png'),
-                ('Buy Me a Coffee', 'buy_me_a_coffee', 'src/ui/assets/coffee.png'),
+                ('Settings', 'settings', 'src/ui/assets/settings_white.ico'),
+                ('About', 'about', 'src/ui/assets/about_white.ico'),
+                ('Check for Updates', 'check_for_updates', 'src/ui/assets/check_for_updates_white.ico'),
+                ('Buy Me a Coffee', 'buy_me_a_coffee', 'src/ui/assets/buy_me_a_coffee_red.ico'),
             ]
         )
 

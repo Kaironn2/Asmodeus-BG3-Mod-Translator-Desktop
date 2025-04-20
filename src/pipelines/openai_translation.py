@@ -17,8 +17,8 @@ from src.database.repositories.language_repository import LanguageRepository
 class OpenAITranslationPipeline:
 
     def __init__(
-        self, session: Session, mod_name: str, mod_path: Path, source_language: str, target_language: str,
-        author: str, description: str,
+        self, session: Session, openai_key: str, mod_name: str, mod_path: Path, 
+        source_language: str, target_language: str, author: str, description: str,
         ) -> None:
         
         self.session = session
@@ -39,16 +39,32 @@ class OpenAITranslationPipeline:
             target_lang=target_language,
             session=session,
         )
-        self.openai_service = OpenAIService()
+        self.openai_service = OpenAIService(openai_key=openai_key)
+        
+        self.xml_paths = []
 
 
     
     def run(self) -> None:
+        if self.mod_path.suffix == '.pak' or self.mod_path.suffix == '.zip':
+            self.pak_translation()
+        
+        if self.mod_path.suffix == '.xml':
+            self.xml_translation()
+
+
+    def pak_translation(self) -> None:
         self._mod_unpack()
         self._create_folder_structure()
         self._create_meta()
         self._translate()
         self._mod_pack()
+
+    
+    def xml_translation(self) -> None:
+        self.xml_paths.append(self.mod_path)
+        self._create_folder_structure()
+        self._translate()
 
     
     def _mod_unpack(self) -> None:
@@ -117,26 +133,27 @@ class OpenAITranslationPipeline:
 
             target_text = DictionaryRepository.find_translations_by_text(
                 session=self.session,
-                source_lang=self.source_language,
-                target_lang=self.target_language,
+                source_language=self.source_language,
+                target_language=self.target_language,
                 source_text=source_text,
             )
 
-            if target_text is None:
+            translation_mode = 'Dictionary'
 
+            if target_text is None:
                 prompt = self.openai_prompt.get_prompt(
                     source_text=source_text,
                 )
-
                 target_text = self.openai_service.gpt_chat_completion(
                     content=source_text,
                     system_prompt=prompt,
                 )
+                translation_mode = 'GPT 4o-mini'
 
             DictionaryRepository.upsert_translation(
                 session=self.session,
-                source_lang=self.source_language,
-                target_lang=self.target_language,
+                source_language=self.source_language,
+                target_language=self.target_language,
                 source_text=source_text,
                 target_text=target_text,
                 mod_name=self.mod_name,
@@ -146,4 +163,4 @@ class OpenAITranslationPipeline:
             localization.at[idx, 'text'] = target_text
 
             counter += 1
-            print(f'Translation progress: {counter}/{total_rows}')
+            print(f'Translation progress: [{counter}/{total_rows}] {translation_mode} -> {source_text} -> {target_text}')

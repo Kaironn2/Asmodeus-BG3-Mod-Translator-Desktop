@@ -5,7 +5,7 @@ class LanguageComboBox(QComboBox):
     def __init__(self, languages, parent=None):
         super().__init__(parent)
         self.setFixedHeight(40)
-        self.setFixedWidth(160)
+        self.setFixedWidth(190)
         self.addItems(languages)
         self.setCurrentIndex(-1)
         self.setStyleSheet("""
