@@ -1,10 +1,29 @@
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit, QListWidget, QLabel, QAbstractItemView, QHeaderView
+    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit, QListWidget, QLabel, QAbstractItemView, QHeaderView,
+    QStyledItemDelegate, QTextEdit,
 )
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QTextOption
 from src.database.connection import get_session
 from src.database.repositories.dictionary_repository import DictionaryRepository
 from src.database.repositories.language_repository import LanguageRepository
+
+
+class TextEditDelegate(QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        editor = QTextEdit(parent)
+        editor.setWordWrapMode(QTextOption.WordWrap)
+        return editor
+
+    def setEditorData(self, editor, index):
+        text = index.model().data(index, Qt.EditRole) or ""
+        editor.setPlainText(text)
+
+    def setModelData(self, editor, model, index):
+        model.setData(index, editor.toPlainText(), Qt.EditRole)
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
 
 class DictionaryView(QWidget):
@@ -40,6 +59,10 @@ class DictionaryView(QWidget):
         self.table.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.table.verticalHeader().setVisible(False)
+        self.table.setWordWrap(True)
+        delegate = TextEditDelegate(self.table)
+        self.table.setItemDelegateForColumn(0, delegate)
+        self.table.setItemDelegateForColumn(1, delegate)
         self.table.setStyleSheet("""
             QTableWidget {
                 background: #2a2a2a;
@@ -91,9 +114,11 @@ class DictionaryView(QWidget):
 
     def populate_table_from_df(self):
         self.table.blockSignals(True)
-        filtered_df = self.get_filtered_df()
-        self.table.setRowCount(len(filtered_df))
-        for idx, row in filtered_df.iterrows():
+        df_filtered = self.get_filtered_df()
+        self._index_map = df_filtered.index.to_list()
+        self.table.setRowCount(len(self._index_map))
+        for view_row, orig_idx in enumerate(self._index_map):
+            row = df_filtered.loc[orig_idx]
             lang1_item = QTableWidgetItem(str(row['text_language1']))
             lang2_item = QTableWidgetItem(str(row['text_language2']))
             language1_item = QTableWidgetItem(str(row['language1']))
@@ -105,11 +130,11 @@ class DictionaryView(QWidget):
             language1_item.setTextAlignment(Qt.AlignTop)
             language2_item.setTextAlignment(Qt.AlignTop)
             uid_item.setTextAlignment(Qt.AlignTop)
-            self.table.setItem(idx, 0, lang1_item)
-            self.table.setItem(idx, 1, lang2_item)
-            self.table.setItem(idx, 2, language1_item)
-            self.table.setItem(idx, 3, language2_item)
-            self.table.setItem(idx, 4, uid_item)
+            self.table.setItem(view_row, 0, lang1_item)
+            self.table.setItem(view_row, 1, lang2_item)
+            self.table.setItem(view_row, 2, language1_item)
+            self.table.setItem(view_row, 3, language2_item)
+            self.table.setItem(view_row, 4, uid_item)
         self.table.resizeRowsToContents()
         self.table.blockSignals(False)
 
@@ -122,18 +147,17 @@ class DictionaryView(QWidget):
             df = df[df['text_language1'].str.contains(self.filter_lang1.text(), case=False, na=False)]
         if self.filter_lang2.text():
             df = df[df['text_language2'].str.contains(self.filter_lang2.text(), case=False, na=False)]
-        return df.reset_index(drop=True)
+        return df
 
     def apply_filters(self):
         self.populate_table_from_df()
 
     def on_cell_edited(self, item):
-        row = item.row()
+        view_row = item.row()
         col = item.column()
-        if self.df is None or col == 4:  # UID não editável, vou pensar se tem um porquê de deixar open
+        if not hasattr(self, '_index_map') or self.df is None or col == 4:
             return
-        filtered_df = self.get_filtered_df()
-        real_row = filtered_df.index[row]
+        real_row = self._index_map[view_row]
         new_value = item.text()
         if col == 0:
             self.df.at[real_row, 'text_language1'] = new_value
