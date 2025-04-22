@@ -3,6 +3,8 @@ from PySide6.QtGui import QPixmap, QCursor
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
 
+from src.config.paths import resource_path
+
 
 class BuyMeACoffeeView(QWidget):
     def __init__(self, parent=None):
@@ -11,7 +13,7 @@ class BuyMeACoffeeView(QWidget):
         layout.setAlignment(Qt.AlignTop | Qt.AlignHCenter)
 
         self.kofi_label = QLabel()
-        pixmap = QPixmap('src/ui/assets/kaironn_kofi.png')
+        pixmap = QPixmap(resource_path('src/ui/assets/kaironn_kofi.png'))
         self.kofi_label.setPixmap(pixmap)
         self.kofi_label.setCursor(QCursor(Qt.PointingHandCursor))
         self.kofi_label.setAlignment(Qt.AlignCenter)

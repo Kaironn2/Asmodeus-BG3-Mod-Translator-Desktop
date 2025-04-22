@@ -8,16 +8,15 @@ from src.helpers.validators import Validators
 from src.parsers.lsx_parser import LsxParser
 from src.parsers.xml_parser import XmlParser
 from src.services.external_tools.lslib_service import LslibService
-from src.services.openai.openai_service import OpenAIService
-from src.services.openai.prompts import OpenAIPrompt
+from src.services.deepl.deepl_service import DeeplService
 from src.database.repositories.dictionary_repository import DictionaryRepository
 from src.database.repositories.language_repository import LanguageRepository
 
 
-class OpenAITranslationPipeline:
+class DeepLTranslationPipeline:
 
     def __init__(
-        self, session: Session, openai_key: str, mod_name: str, mod_path: Path, 
+        self, session: Session, deepl_api_key: str, mod_name: str, mod_path: Path, 
         source_language: str, target_language: str, author: str, description: str,
         ) -> None:
         
@@ -35,15 +34,9 @@ class OpenAITranslationPipeline:
             code=self.target_language,
         )
 
-        self.openai_prompt = OpenAIPrompt(
-            source_lang=source_language,
-            target_lang=target_language,
-            session=session,
-        )
-        self.openai_service = OpenAIService(openai_key=openai_key)
+        self.deepl_service = DeeplService(deepl_api_key=deepl_api_key)
         
         self.xml_paths = []
-
 
     
     def run(self) -> None:
@@ -126,7 +119,6 @@ class OpenAITranslationPipeline:
     def _translate_xml_files(self, localization: pd.DataFrame) -> None:
         total_rows = len(localization)
         counter = 0
-        gpt_calls = 0
         for idx, row in localization.iterrows():
 
             source_text = row['text']
@@ -142,14 +134,12 @@ class OpenAITranslationPipeline:
             translation_mode = 'Dictionary'
 
             if target_text is None:
-                prompt = self.openai_prompt.get_prompt(
-                    source_text=source_text,
+                target_text = self.deepl_service.translate(
+                    text=source_text,
+                    source_language_code=self.source_language.upper(),
+                    target_language_code=self.target_language.upper(),
                 )
-                target_text = self.openai_service.gpt_chat_completion(
-                    content=source_text,
-                    system_prompt=prompt,
-                )
-                translation_mode = 'GPT 4o-mini'
+                translation_mode = 'DeepL'
 
             DictionaryRepository.upsert_translation(
                 session=self.session,

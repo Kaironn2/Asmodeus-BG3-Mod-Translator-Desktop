@@ -141,3 +141,4 @@ dmypy.json
 
 # project configs
 /configs/
+test.py

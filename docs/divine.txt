@@ -1,7 +1,0 @@
-Empacotar
-
-.\Divine.exe -g bg3 -a "create-package" -s "C:\Users\jonat\Desktop\projects\Asmodeus\Voidborne" -d "C:\Users\jonat\Desktop\projects\Asmodeus\VoidborneCompacted.pak"
-
-Desempacotar
-
-PS C:\Users\jonat\Desktop\projects\Asmodeus\lslib\tools> .\Divine.exe -g bg3 -a "extract-package" -s "C:\Users\jonat\Desktop\projects\Asmodeus\Voidborne.pak" -d "C:\Users\jonat\Desktop\projects\Asmodeus"

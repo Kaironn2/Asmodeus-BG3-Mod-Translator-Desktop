@@ -40,6 +40,23 @@ class DictionaryView(QWidget):
         self.table.setEditTriggers(QAbstractItemView.AllEditTriggers)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
         self.table.verticalHeader().setVisible(False)
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background: #2a2a2a;
+                color: #fff;
+                font-size: 15px;
+            }
+            QHeaderView::section {
+                background: #fff;
+                color: #222;
+                font-weight: bold;
+                border: 1px solid #ddd;
+            }
+            QTableWidget QTableCornerButton::section {
+                background: #2a2a2a;
+                border: 1px solid #ddd;
+            }
+        """)
         self.table.itemChanged.connect(self.on_cell_edited)
         right_layout.addWidget(self.table)
 
@@ -47,6 +64,12 @@ class DictionaryView(QWidget):
         main_layout.addLayout(right_layout)
 
         self.load_mods()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.load_mods()
+        if self.current_mod:
+            self.load_mod_entries()
 
     def load_mods(self):
         with get_session() as session:

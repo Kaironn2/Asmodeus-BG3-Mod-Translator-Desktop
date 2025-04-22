@@ -30,6 +30,31 @@ class ConfigManager:
                 except Exception:
                     return ''
         return ''
+    
+    @staticmethod
+    def save_deepl_key(key: str):
+        config = {}
+        os.makedirs(os.path.dirname(JSON_CONFIG), exist_ok=True)
+        if os.path.exists(JSON_CONFIG):
+            with open(JSON_CONFIG, 'r', encoding='utf-8') as f:
+                try:
+                    config = json.load(f)
+                except Exception:
+                    config = {}
+        config['deepl_key'] = key
+        with open(JSON_CONFIG, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+    
+    @staticmethod
+    def load_deepl_key() -> str:
+        if os.path.exists(JSON_CONFIG):
+            with open(JSON_CONFIG, 'r', encoding='utf-8') as f:
+                try:
+                    config = json.load(f)
+                    return config.get('deepl_key', '')
+                except Exception:
+                    return ''
+        return ''
 
     @staticmethod
     def save_last_languages(source_lang: str, target_lang: str):
@@ -59,3 +84,28 @@ class ConfigManager:
                 except Exception:
                     return ('', '')
         return ('', '')
+
+    @staticmethod
+    def save_author(author: str):
+        config = {}
+        os.makedirs(os.path.dirname(JSON_CONFIG), exist_ok=True)
+        if os.path.exists(JSON_CONFIG):
+            with open(JSON_CONFIG, 'r', encoding='utf-8') as f:
+                try:
+                    config = json.load(f)
+                except Exception:
+                    config = {}
+        config['author'] = author
+        with open(JSON_CONFIG, 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+    
+    @staticmethod
+    def load_author() -> str:
+        if os.path.exists(JSON_CONFIG):
+            with open(JSON_CONFIG, 'r', encoding='utf-8') as f:
+                try:
+                    config = json.load(f)
+                    return config.get('author', '')
+                except Exception:
+                    return ''
+        return ''
