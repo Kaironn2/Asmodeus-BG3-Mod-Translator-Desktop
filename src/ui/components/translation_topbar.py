@@ -41,9 +41,9 @@ class TopNavBar(QWidget):
 
         nav_items = [
             ('OPENAI (GPT)', 'openai_translation'),
+            ('DEEPL', 'deepl'),
             ('MANUAL', 'manual_translation'),
             ('GOOGLE TRANSLATOR', 'google_translator'),
-            ('DEEPL', 'deepl')
         ]
 
         for text, key in nav_items:

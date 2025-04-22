@@ -2,6 +2,9 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QS
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QIcon
 
+from src.config.paths import resource_path
+
+
 class Sidebar(QWidget):
     def __init__(self, on_selected, parent=None):
         super().__init__(parent)
@@ -17,8 +20,8 @@ class Sidebar(QWidget):
         self._add_section(
             title='Translation',
             options=[
-                ('Translate', 'translate', 'src/ui/assets/translation_blue_icon.ico'),
-                ('Dictionaries', 'dictionaries', 'src/ui/assets/dictionary_icon_blue.ico'),
+                ('Translate', 'translate', resource_path('src/ui/assets/translation_blue_icon.ico')),
+                ('Dictionaries', 'dictionaries', resource_path('src/ui/assets/dictionary_icon_blue.ico')),
             ]
         )
         self._add_separator()
@@ -27,8 +30,8 @@ class Sidebar(QWidget):
         self._add_section(
             title='Tools',
             options=[
-                ('Extract Mod', 'extract_mod', 'src/ui/assets/extract_icon.ico'),
-                ('Create Mod Package', 'create_mod_package', 'src/ui/assets/create_package_icon.ico'),
+                ('Extract Mod', 'extract_mod', resource_path('src/ui/assets/extract_icon.ico')),
+                ('Create Mod Package', 'create_mod_package', resource_path('src/ui/assets/create_package_icon.ico')),
             ]
         )
         self._add_separator()
@@ -37,10 +40,10 @@ class Sidebar(QWidget):
         self._add_section(
             title='Configs',
             options=[
-                ('Settings', 'settings', 'src/ui/assets/settings_white.ico'),
-                ('About', 'about', 'src/ui/assets/about_white.ico'),
-                ('Check for Updates', 'check_for_updates', 'src/ui/assets/check_for_updates_white.ico'),
-                ('Buy Me a Coffee', 'buy_me_a_coffee', 'src/ui/assets/buy_me_a_coffee_red.ico'),
+                ('Settings', 'settings', resource_path('src/ui/assets/settings_white.ico')),
+                ('About', 'about', resource_path('src/ui/assets/about_white.ico')),
+                ('Check for Updates', 'check_for_updates', resource_path('src/ui/assets/check_for_updates_white.ico')),
+                ('Buy Me a Coffee', 'buy_me_a_coffee', resource_path('src/ui/assets/buy_me_a_coffee_red.ico')),
             ]
         )
 

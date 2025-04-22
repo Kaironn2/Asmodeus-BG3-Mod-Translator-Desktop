@@ -10,6 +10,7 @@ class DragDropWidget(QWidget):
     def __init__(self, accepted_extensions: list, description_text: str, droped_text: str = 'File received!', parent=None):
         super().__init__(parent)
         self.accepted_extensions = [ext.lower() for ext in accepted_extensions]
+        self.description_text = description_text
         self.droped_text = droped_text
         self.setAcceptDrops(True)
         self.setMinimumHeight(120)
@@ -80,3 +81,7 @@ class DragDropWidget(QWidget):
                 if file_path:
                     self.file_dropped.emit(file_path)
                     self.label.setText(self.droped_text)
+
+    def reset(self):
+        self.label.setText(self.description_text)
+        self.setStyleSheet(self.default_style)

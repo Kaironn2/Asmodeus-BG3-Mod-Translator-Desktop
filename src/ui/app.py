@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QIcon
 
+from src.config.paths import resource_path
 from src.database.connection import get_session
 from src.database.repositories.language_repository import LanguageRepository
 
@@ -12,6 +13,7 @@ from src.ui.views.create_mod_package_view import CreateModPackageView
 from src.ui.views.extract_mod_view import ExtractModView
 from src.ui.views.translation.manual_view import ManualView
 from src.ui.views.translation.openai_view import OpenaiView
+from src.ui.views.translation.deepl_view import DeeplView
 from src.ui.components.translation_topbar import TopNavBar
 from src.ui.components.sidebar import Sidebar
 
@@ -21,7 +23,7 @@ class Window(QMainWindow):
         super().__init__()
         self.setWindowTitle('Asmodeus - BG3 Translation Tool - v0.1.0')
         self.resize(1000, 700)
-        self.setWindowIcon(QIcon('src/ui/assets/asmodeus_logo_white.ico'))
+        self.setWindowIcon(QIcon(resource_path('src/ui/assets/asmodeus_logo_white.ico')))
 
         with get_session() as session:
             self.languages = sorted(LanguageRepository.get_all_language_names(session))
@@ -46,8 +48,8 @@ class Window(QMainWindow):
         self.stacked = QStackedWidget()
         self.views['openai_translation'] = OpenaiView(languages=self.languages)
         self.views['manual_translation'] = ManualView(languages=self.languages)
+        self.views['deepl'] = DeeplView(languages=self.languages)
         self.views['google_translator'] = QLabel('View: Google Translator - coming soon')
-        self.views['deepl'] = QLabel('View: DeepL - coming soon')
         for key, widget in self.views.items():
             self.stacked.addWidget(widget)
 

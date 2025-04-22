@@ -11,10 +11,10 @@ from src.ui.components.language_combobox import LanguageComboBox
 from src.config.config_manager import ConfigManager
 from src.database.connection import get_session
 from src.database.repositories.language_repository import LanguageRepository
-from src.pipelines.openai_translation import OpenAITranslationPipeline
+from src.pipelines.deepl_translation import DeepLTranslationPipeline
 
 
-class OpenaiPipelineWorker(QThread):
+class DeepLPipelineWorker(QThread):
     progress = Signal(str)
     finished = Signal()
 
@@ -42,7 +42,7 @@ class OpenaiPipelineWorker(QThread):
             self.finished.emit()
 
 
-class OpenaiView(QWidget):
+class DeeplView(QWidget):
     def __init__(self, languages, parent=None):
         super().__init__(parent)
         main_layout = QVBoxLayout(self)
@@ -84,14 +84,14 @@ class OpenaiView(QWidget):
         input_row.addWidget(validate_btn)
         right_layout.addLayout(input_row)
 
-        self.openai_key_input = QLineEdit()
-        self.openai_key_input.setPlaceholderText('OpenAI API Key')
-        self.openai_key_input.setFixedHeight(40)
-        self.openai_key_input.setMinimumWidth(240)
-        self.openai_key_input.setEchoMode(QLineEdit.Password)
-        right_layout.addWidget(self.openai_key_input)
+        self.deepl_key_input = QLineEdit()
+        self.deepl_key_input.setPlaceholderText('DeepL API Key')
+        self.deepl_key_input.setFixedHeight(40)
+        self.deepl_key_input.setMinimumWidth(240)
+        self.deepl_key_input.setEchoMode(QLineEdit.Password)
+        right_layout.addWidget(self.deepl_key_input)
 
-        self.openai_key_input.setText(ConfigManager.load_openai_key())
+        self.deepl_key_input.setText(ConfigManager.load_deepl_key())
 
         self.mod_name_input = QLineEdit()
         self.mod_name_input.setPlaceholderText('Mod Name')
@@ -171,7 +171,7 @@ class OpenaiView(QWidget):
 
     def on_start_translation(self):
         self.progress_text.clear()
-        ConfigManager.save_openai_key(self.openai_key_input.text())
+        ConfigManager.save_deepl_key(self.deepl_key_input.text())
         ConfigManager.save_last_languages(
             self.source_lang_combo.currentText(),
             self.target_lang_combo.currentText()
@@ -181,14 +181,14 @@ class OpenaiView(QWidget):
         target_lang = self.target_lang_combo.currentText()
         mod_name = self.mod_name_input.text()
         author = self.author_input.text()
-        description = f'{mod_name} ptbr translation'
+        description = f'{mod_name} {target_lang} translation'
 
         with get_session() as session:
             source_lang_code = LanguageRepository.find_language_by_name(session=session, name=source_lang)
             target_lang_code = LanguageRepository.find_language_by_name(session=session, name=target_lang)
 
-            openai_translation_pipeline = OpenAITranslationPipeline(
-                openai_key=ConfigManager.load_openai_key(),
+            deepl_translation_pipeline = DeepLTranslationPipeline(
+                deepl_api_key=ConfigManager.load_deepl_key(),
                 mod_name=mod_name,
                 session=session,
                 source_language=source_lang_code,
@@ -198,7 +198,7 @@ class OpenaiView(QWidget):
                 mod_path=Path(self.file_path),
             )
 
-            self.worker = OpenaiPipelineWorker(openai_translation_pipeline)
+            self.worker = DeepLPipelineWorker(deepl_translation_pipeline)
             self.worker.progress.connect(self.append_progress)
             self.worker.finished.connect(self.on_finished_translation)
             self.worker.start()
