@@ -85,4 +85,7 @@ class ManualTranslationPipeline:
                 )
 
             if result is not None:
-                self.df.at[index, 'text'] = getattr(result, self.target_db_col)
+                if hasattr(result, self.target_db_col):
+                    self.df.at[index, 'text'] = getattr(result, self.target_db_col)
+                elif isinstance(result, str):
+                    self.df.at[index, 'text'] = result
