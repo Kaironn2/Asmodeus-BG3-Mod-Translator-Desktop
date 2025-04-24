@@ -19,4 +19,4 @@ class LanguageRepository:
     @staticmethod
     def get_all_language_names(session: Session) -> list[str]:
         statement = select(Language.name)
-        return session.exec(statement).all()
+        return sorted(session.exec(statement).all())

@@ -51,9 +51,9 @@ class DeepLView(QWidget):
         right_layout.setContentsMargins(24, 24, 24, 24)
         right_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-        self.openai_key_input = LabeledLineEdit('OpenAI API Key', password=True)
-        right_layout.addWidget(self.openai_key_input)
-        self.openai_key_input.setText(ConfigManager.load_openai_key())
+        self.deepl_key_input = LabeledLineEdit('DeepL API Key', password=True)
+        right_layout.addWidget(self.deepl_key_input)
+        self.deepl_key_input.setText(ConfigManager.load_deepl_key())
 
         self.mod_name_input = LabeledLineEdit('Mod Name')
         right_layout.addWidget(self.mod_name_input)
@@ -109,7 +109,7 @@ class DeepLView(QWidget):
 
     def on_start_translation(self):
         self.progress_table.setRowCount(0)
-        ConfigManager.save_openai_key(self.openai_key_input.text())
+        ConfigManager.save_deepl_key(self.deepl_key_input.text())
         ConfigManager.save_last_languages(
             self.source_lang_combo.currentText(),
             self.target_lang_combo.currentText()
@@ -125,7 +125,7 @@ class DeepLView(QWidget):
             source_lang_code = LanguageRepository.find_language_by_name(session=session, name=source_lang)
             target_lang_code = LanguageRepository.find_language_by_name(session=session, name=target_lang)
 
-            openai_translation_pipeline = DeepLTranslationPipeline(
+            deepl_translation_pipeline = DeepLTranslationPipeline(
                 deepl_api_key=ConfigManager.load_deepl_key(),
                 mod_name=mod_name,
                 session=session,
@@ -136,7 +136,7 @@ class DeepLView(QWidget):
                 mod_path=Path(self.file_path),
             )
 
-            self.worker = PipelineWorker(openai_translation_pipeline)
+            self.worker = PipelineWorker(deepl_translation_pipeline)
             self.worker.finished.connect(self.on_finished_translation)
             self.worker.error.connect(self.show_worker_error) 
             self.worker.progress_row.connect(self.update_progress_table)

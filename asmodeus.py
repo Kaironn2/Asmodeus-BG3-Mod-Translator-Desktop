@@ -23,6 +23,6 @@ if __name__ == '__main__':
         }
         """
     )
-    window = Window('Asmodeus - BG3 Translation Tool - v0.3.7.0')
+    window = Window('Asmodeus - BG3 Translation Tool - v0.4.1.3')
     window.show()
     app.exec()
