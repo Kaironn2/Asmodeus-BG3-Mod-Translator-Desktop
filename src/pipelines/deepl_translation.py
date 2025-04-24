@@ -19,7 +19,7 @@ class DeepLTranslationPipeline:
         self, session: Session, deepl_api_key: str, mod_name: str, mod_path: Path, 
         source_language: str, target_language: str, author: str, description: str,
         ) -> None:
-        
+
         self.session = session
         self.mod_name = Validators.validate_mod_name(mod_name) + f'_{target_language}'
         self.original_mod_name = mod_name
@@ -37,6 +37,8 @@ class DeepLTranslationPipeline:
         self.deepl_service = DeeplService(deepl_api_key=deepl_api_key)
         
         self.xml_paths = []
+
+        self.progress_row = None
 
     
     def run(self) -> None:
@@ -67,8 +69,8 @@ class DeepLTranslationPipeline:
             mod_name=self.mod_name,
             just_localization=True,
             session=self.session,
-            source_language=self.source_language,
-            target_language=self.target_language,
+            source_language_code=self.source_language,
+            target_language_code=self.target_language,
         )
 
     
@@ -101,14 +103,14 @@ class DeepLTranslationPipeline:
             localization = XmlParser.xml_to_dataframe(xml_path)
             
             if localization.empty:
-                print(f'{xml_path.name} não possui content.')
+                print(f'{xml_path.name} dont have <content> tag.')
                 xml_path.unlink()
                 continue
             
             try:
                 self._translate_xml_files(localization)
             except KeyError as e:
-                print(f'{xml_path.name} não possui content.')
+                print(f'{xml_path.name} dont have <content> tag.')
                 xml_path.unlink()
                 continue
 
@@ -135,11 +137,11 @@ class DeepLTranslationPipeline:
 
             if target_text is None:
                 target_text = self.deepl_service.translate(
-                    text=source_text,
-                    source_language_code=self.source_language.upper(),
-                    target_language_code=self.target_language.upper(),
+                    source_text=source_text,
+                    source_language=self.source_language,
+                    target_language=self.target_language,
                 )
-                translation_mode = 'DeepL'
+                translation_mode = 'DeepL API'
 
             DictionaryRepository.upsert_translation(
                 session=self.session,
@@ -152,6 +154,9 @@ class DeepLTranslationPipeline:
             )
 
             localization.at[idx, 'text'] = target_text
+            if self.progress_row:
+                self.progress_row.emit((idx + 1), source_text, target_text)
+                self.progress_value.emit((idx + 1), (total_rows))
 
             counter += 1
             print(f'Translation progress: [{counter}/{total_rows}] {translation_mode} -> {source_text} -> {target_text}')

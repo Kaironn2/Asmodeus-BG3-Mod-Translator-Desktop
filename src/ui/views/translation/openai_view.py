@@ -1,12 +1,17 @@
 from pathlib import Path
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, QTextEdit, 
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit,
+    QTableWidget, QTableWidgetItem
 )
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt
 
 from src.ui.components.drag_drop import DragDropWidget
 from src.ui.components.language_combobox import LanguageComboBox
+from src.ui.components.labeled_line_edit import LabeledLineEdit
+from src.ui.components.error_dialog import show_error_popup
+from src.ui.components.pipeline_worker import PipelineWorker
+from src.ui.components.translation_progress import TranslationProgressTable, TranslationProgressBar
 
 from src.config.config_manager import ConfigManager
 from src.database.connection import get_session
@@ -14,36 +19,8 @@ from src.database.repositories.language_repository import LanguageRepository
 from src.pipelines.openai_translation import OpenAITranslationPipeline
 
 
-class OpenaiPipelineWorker(QThread):
-    progress = Signal(str)
-    finished = Signal()
-
-    def __init__(self, pipeline):
-        super().__init__()
-        self.pipeline = pipeline
-
-    def run (self):
-        import sys
-
-        class PrintCatcher:
-            def __init__(self, signal):
-                self.signal = signal
-            def write(self, message):
-                self.signal.emit(message.strip())
-            def flush(self):
-                pass
-        
-        old_stdout = sys.stdout
-        sys.stdout = PrintCatcher(self.progress)
-        try:
-            self.pipeline.run()
-        finally:
-            sys.stdout = old_stdout
-            self.finished.emit()
-
-
 class OpenaiView(QWidget):
-    def __init__(self, languages, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(32, 32, 32, 32)
@@ -75,36 +52,15 @@ class OpenaiView(QWidget):
         right_layout.setContentsMargins(24, 24, 24, 24)
         right_layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
-        input_row = QHBoxLayout()
-        self.path_input = QLineEdit()
-        self.path_input.setPlaceholderText('Ex: C:/path/for/file.zip')
-        validate_btn = QPushButton('Validate')
-        validate_btn.clicked.connect(self.validate_path)
-        input_row.addWidget(self.path_input)
-        input_row.addWidget(validate_btn)
-        right_layout.addLayout(input_row)
-
-        self.openai_key_input = QLineEdit()
-        self.openai_key_input.setPlaceholderText('OpenAI API Key')
-        self.openai_key_input.setFixedHeight(40)
-        self.openai_key_input.setMinimumWidth(240)
-        self.openai_key_input.setEchoMode(QLineEdit.Password)
+        self.openai_key_input = LabeledLineEdit('OpenAI API Key', password=True)
         right_layout.addWidget(self.openai_key_input)
-
         self.openai_key_input.setText(ConfigManager.load_openai_key())
 
-        self.mod_name_input = QLineEdit()
-        self.mod_name_input.setPlaceholderText('Mod Name')
-        self.mod_name_input.setFixedHeight(40)
-        self.mod_name_input.setMinimumWidth(240)
+        self.mod_name_input = LabeledLineEdit('Mod Name')
         right_layout.addWidget(self.mod_name_input)
 
-        self.author_input = QLineEdit()
-        self.author_input.setPlaceholderText('Author Name')
-        self.author_input.setFixedHeight(40)
-        self.author_input.setMinimumWidth(240)
+        self.author_input = LabeledLineEdit('Author Name')
         right_layout.addWidget(self.author_input)
-
         self.author_input.setText(ConfigManager.load_author())
 
         right_widget = QWidget()
@@ -112,15 +68,8 @@ class OpenaiView(QWidget):
 
         lang_row = QHBoxLayout()
 
-        self.source_lang_combo = LanguageComboBox(languages=languages)
-        self.target_lang_combo = LanguageComboBox(languages=languages)
-
-        languages_cache = ConfigManager.load_last_languages()
-        if len(languages_cache) == 2:
-            source_lang, target_lang = languages_cache
-            self.source_lang_combo.setCurrentText(source_lang)
-            self.target_lang_combo.setCurrentText(target_lang)
-
+        self.source_lang_combo = LanguageComboBox(cache='source')
+        self.target_lang_combo = LanguageComboBox(cache='target')
 
         lang_row.addWidget(self.source_lang_combo)
         lang_row.addWidget(self.target_lang_combo)
@@ -136,41 +85,31 @@ class OpenaiView(QWidget):
         top_row_layout.addWidget(right_widget)
 
         bottom_row_widget = QWidget()
-        bottom_row_layout = QHBoxLayout(bottom_row_widget)
+        bottom_row_layout = QVBoxLayout(bottom_row_widget)
         bottom_row_layout.setContentsMargins(0, 0, 0, 0)
-        bottom_row_layout.setSpacing(0)
+        bottom_row_layout.setSpacing(8)
 
-        self.progress_text = QTextEdit()
-        self.progress_text.setReadOnly(True)
-        self.progress_text.setPlaceholderText('Waiting for translation...')
-        self.progress_text.setStyleSheet("""
-            background: #18191A;
-            color: #fff;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-        """)
-        bottom_row_layout.addWidget(self.progress_text)
+        self.progress_table = TranslationProgressTable()
+        bottom_row_layout.addWidget(self.progress_table)
 
+        self.progress_bar = TranslationProgressBar()
+        bottom_row_layout.addWidget(self.progress_bar)
+    
         main_layout.addWidget(top_row_widget)
         main_layout.addWidget(bottom_row_widget)
 
     def on_file_dropped(self, file_path):
         self.file_path = file_path
-        self.path_input.setText(file_path)
 
     def validate_path(self):
         self.file_path = self.path_input.text()
 
     def on_finished_translation(self):
-        self.progress_text.append('Translation finished!')
-        self.path_input.clear()
         self.mod_name_input.clear()
         self.drag_drop.reset()
 
     def on_start_translation(self):
-        self.progress_text.clear()
+        self.progress_table.setRowCount(0)
         ConfigManager.save_openai_key(self.openai_key_input.text())
         ConfigManager.save_last_languages(
             self.source_lang_combo.currentText(),
@@ -198,10 +137,15 @@ class OpenaiView(QWidget):
                 mod_path=Path(self.file_path),
             )
 
-            self.worker = OpenaiPipelineWorker(openai_translation_pipeline)
-            self.worker.progress.connect(self.append_progress)
+            self.worker = PipelineWorker(openai_translation_pipeline)
             self.worker.finished.connect(self.on_finished_translation)
+            self.worker.error.connect(self.show_worker_error) 
+            self.worker.progress_row.connect(self.update_progress_table)
+            self.worker.progress_value.connect(self.progress_bar.set_progress)
             self.worker.start()
 
-    def append_progress(self, text):
-        self.progress_text.append(text)
+    def show_worker_error(self, tb_str):
+        show_error_popup(tb_str, self)
+
+    def update_progress_table(self, index, source_text, target_text):
+        self.progress_table.update_row(index, source_text, target_text)

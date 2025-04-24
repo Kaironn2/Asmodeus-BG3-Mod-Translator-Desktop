@@ -7,7 +7,6 @@ from sqlmodel import Session
 
 from src.config import paths
 from src.database.repositories.language_repository import LanguageRepository
-from src.helpers.validators import Validators
 from src.utils.dir_utils import DirUtils
 from src.utils.zip_utils import ZipUtils
 
@@ -17,7 +16,7 @@ class LslibService:
     @classmethod
     def mod_unpack(
         cls, mod_path: Path, mod_name: str, just_localization: bool, 
-        session: Session, source_language: str, target_language: str
+        session: Session, source_language_code: str, target_language_code: str
         ) -> tuple[list[Path], Path]:
 
         paths.TEMP_UNPACKED.mkdir(exist_ok=True, parents=True)
@@ -33,14 +32,13 @@ class LslibService:
         
         if not just_localization:
             cls._divine_unpack(mod_path, paths.UNPACKED / mod_name)
-            input()
             shutil.rmtree(paths.TEMP_UNPACKED)
             return
 
         cls._divine_unpack(mod_path, paths.TEMP_UNPACKED)
-        xml_files, meta_file = cls._list_localization_files(paths.TEMP_UNPACKED, source_language, session)
+        xml_files, meta_file = cls._list_localization_files(paths.TEMP_UNPACKED, source_language_code, session)
 
-        target_language = LanguageRepository.find_language_by_code(session, target_language).replace(' ', '')
+        target_language = LanguageRepository.find_language_by_code(session, target_language_code).replace(' ', '')
 
         output_path = paths.UNPACKED / mod_name / 'Mods' / mod_name
         output_path.mkdir(parents=True, exist_ok=True)
@@ -131,11 +129,11 @@ class LslibService:
         source_language = LanguageRepository.find_language_by_code(session, source_language)
         
         xml_files = DirUtils.list_files_by_extension(folder, 'xml')
-        print('XML files:', xml_files)
         loc_files = []
         for xml in xml_files:
             if xml.parent.name == source_language:
                 loc_files.append(xml)
+                print(f'Found localization file: {xml}\n')
         
         lsx_files = DirUtils.list_files_by_extension(folder, 'lsx')
         for lsx in lsx_files:

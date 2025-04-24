@@ -9,6 +9,7 @@ from src.config.paths import resource_path
 from src.database.connection import create_db_and_tables
 from src.ui.app import Window
 
+
 if __name__ == '__main__':
     create_db_and_tables()
     app = QApplication([])
@@ -22,6 +23,6 @@ if __name__ == '__main__':
         }
         """
     )
-    window = Window()
+    window = Window('Asmodeus - BG3 Translation Tool - v0.3.7.0')
     window.show()
     app.exec()

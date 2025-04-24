@@ -6,7 +6,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextOption
 from src.database.connection import get_session
 from src.database.repositories.dictionary_repository import DictionaryRepository
-from src.database.repositories.language_repository import LanguageRepository
 
 
 class TextEditDelegate(QStyledItemDelegate):

@@ -62,7 +62,7 @@ class LsxParser:
 
         module_info = cls.find_node_by_id(root, 'ModuleInfo')
         if module_info is None:
-            raise ValueError('Nó ModuleInfo não encontrado no arquivo LSX')
+            raise ValueError('ModuleInfo node not found in the XML file.')
         
         
         attr = cls.find_attribute_by_id(module_info, 'Name')
@@ -80,9 +80,9 @@ class LsxParser:
                 attr = cls.find_attribute_by_id(module_info, attr_id)
                 if attr is not None:
                     attr.set('value', new_value)
-                    print(f'Atributo {attr_id} atualizado para: {new_value}')
+                    print(f'Attribute {attr_id} updated to: {new_value}')
                 else:
-                    print(f'Atributo {attr_id} não encontrado')
+                    print(f'Attribute {attr_id} not found in ModuleInfo node.')
 
         cls.save_lsx(tree, meta_output_path)
 
