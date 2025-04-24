@@ -137,9 +137,9 @@ class DeepLTranslationPipeline:
 
             if target_text is None:
                 target_text = self.deepl_service.translate(
-                    source_text=source_text,
-                    source_language=self.source_language,
-                    target_language=self.target_language,
+                    text=source_text,
+                    source_language_code=self.source_language,
+                    target_language_code=self.target_language,
                 )
                 translation_mode = 'DeepL API'
 
