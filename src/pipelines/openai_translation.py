@@ -44,6 +44,7 @@ class OpenAITranslationPipeline:
         
         self.xml_paths = []
 
+        self.progress_row = None
 
     
     def run(self) -> None:
@@ -74,8 +75,8 @@ class OpenAITranslationPipeline:
             mod_name=self.mod_name,
             just_localization=True,
             session=self.session,
-            source_language=self.source_language,
-            target_language=self.target_language,
+            source_language_code=self.source_language,
+            target_language_code=self.target_language,
         )
 
     
@@ -108,14 +109,14 @@ class OpenAITranslationPipeline:
             localization = XmlParser.xml_to_dataframe(xml_path)
             
             if localization.empty:
-                print(f'{xml_path.name} não possui content.')
+                print(f'{xml_path.name} dont have <content> tag.')
                 xml_path.unlink()
                 continue
             
             try:
                 self._translate_xml_files(localization)
             except KeyError as e:
-                print(f'{xml_path.name} não possui content.')
+                print(f'{xml_path.name} dont have <content> tag.')
                 xml_path.unlink()
                 continue
 
@@ -126,7 +127,6 @@ class OpenAITranslationPipeline:
     def _translate_xml_files(self, localization: pd.DataFrame) -> None:
         total_rows = len(localization)
         counter = 0
-        gpt_calls = 0
         for idx, row in localization.iterrows():
 
             source_text = row['text']
@@ -162,6 +162,9 @@ class OpenAITranslationPipeline:
             )
 
             localization.at[idx, 'text'] = target_text
+            if self.progress_row:
+                self.progress_row.emit((idx + 1), source_text, target_text)
+                self.progress_value.emit((idx + 1), (total_rows))
 
             counter += 1
             print(f'Translation progress: [{counter}/{total_rows}] {translation_mode} -> {source_text} -> {target_text}')

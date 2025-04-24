@@ -13,15 +13,15 @@ from src.ui.views.create_mod_package_view import CreateModPackageView
 from src.ui.views.extract_mod_view import ExtractModView
 from src.ui.views.translation.manual_view import ManualView
 from src.ui.views.translation.openai_view import OpenaiView
-from src.ui.views.translation.deepl_view import DeeplView
+from src.ui.views.translation.deepl_view import DeepLView
 from src.ui.components.translation_topbar import TopNavBar
 from src.ui.components.sidebar import Sidebar
 
 
 class Window(QMainWindow):
-    def __init__(self):
+    def __init__(self, title: str):
         super().__init__()
-        self.setWindowTitle('Asmodeus - BG3 Translation Tool - v0.1.0')
+        self.setWindowTitle(title)
         self.resize(1000, 700)
         self.setWindowIcon(QIcon(resource_path('src/ui/assets/asmodeus_logo_white.ico')))
 
@@ -46,9 +46,9 @@ class Window(QMainWindow):
 
         self.views = {}
         self.stacked = QStackedWidget()
-        self.views['openai_translation'] = OpenaiView(languages=self.languages)
-        self.views['manual_translation'] = ManualView(languages=self.languages)
-        self.views['deepl'] = DeeplView(languages=self.languages)
+        self.views['openai_translation'] = OpenaiView()
+        self.views['manual_translation'] = ManualView()
+        self.views['deepl'] = DeepLView()
         self.views['google_translator'] = QLabel('View: Google Translator - coming soon')
         for key, widget in self.views.items():
             self.stacked.addWidget(widget)

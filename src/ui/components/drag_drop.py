@@ -35,7 +35,6 @@ class DragDropWidget(QWidget):
         if event.mimeData().hasUrls():
             for url in event.mimeData().urls():
                 local_path = url.toLocalFile()
-                # Aceita pastas SEMPRE, ou arquivos com extensão aceita
                 if os.path.isdir(local_path) or any(local_path.lower().endswith(ext) for ext in self.accepted_extensions):
                     self.setStyleSheet(self.active_style)
                     event.acceptProposedAction()
@@ -60,7 +59,6 @@ class DragDropWidget(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            # Se não houver extensões aceitas, abre seletor de pasta
             if not self.accepted_extensions:
                 folder_path = QFileDialog.getExistingDirectory(
                     self,

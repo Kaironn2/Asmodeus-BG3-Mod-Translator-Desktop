@@ -17,7 +17,7 @@ from src.pipelines.manual_translation import ManualTranslationPipeline
 
 
 class ManualView(QWidget):
-    def __init__(self, languages, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.df = None
         self.xml_path = None
@@ -38,18 +38,14 @@ class ManualView(QWidget):
         self.drag_drop.file_dropped.connect(self.on_file_dropped)
         left_layout.addWidget(self.drag_drop, alignment=Qt.AlignTop)
 
-        self.source_lang_combo = LanguageComboBox(languages=languages)
+        self.source_lang_combo = LanguageComboBox(cache='source')
         self.source_lang_combo.setMinimumWidth(240)
         self.source_lang_combo.setMaximumWidth(240)
-        self.target_lang_combo = LanguageComboBox(languages=languages)
+        self.target_lang_combo = LanguageComboBox(cache='target')
         self.target_lang_combo.setMinimumWidth(240)
         self.target_lang_combo.setMaximumWidth(240)
         left_layout.addWidget(self.source_lang_combo)
         left_layout.addWidget(self.target_lang_combo)
-        languages_cache = ConfigManager.load_last_languages()
-        if languages_cache and len(languages_cache) == 2:
-            self.source_lang_combo.setCurrentText(languages_cache[0])
-            self.target_lang_combo.setCurrentText(languages_cache[1])
 
         self.mod_name_input = QLineEdit()
         self.mod_name_input.setPlaceholderText("Mod Name")
