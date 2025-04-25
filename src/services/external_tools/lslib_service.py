@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 import shutil
 import zipfile
+import os, stat
 
 from sqlmodel import Session
 
@@ -32,7 +33,10 @@ class LslibService:
         
         if not just_localization:
             cls._divine_unpack(mod_path, paths.UNPACKED / mod_name)
-            shutil.rmtree(paths.TEMP_UNPACKED)
+            try:
+                shutil.rmtree(paths.TEMP_UNPACKED, onerror=cls._handle_rmtree_error)
+            except Exception as e:
+                print(f'Error removing temporary unpacked folder: {e}')
             return
 
         cls._divine_unpack(mod_path, paths.TEMP_UNPACKED)
@@ -141,3 +145,7 @@ class LslibService:
                 meta_file = lsx
 
         return loc_files, meta_file
+    
+    def _handle_rmtree_error(func, path, exc_info):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)

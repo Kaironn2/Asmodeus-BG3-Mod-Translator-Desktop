@@ -97,7 +97,7 @@ class DictionaryView(QWidget):
         with get_session() as session:
             mods = DictionaryRepository.get_all_mod_names(session)
         self.mods_list.clear()
-        for mod in mods:
+        for mod in sorted(mods, key=lambda x: x.lower()):
             self.mods_list.addItem(mod)
 
     def on_mod_selected(self, item):
