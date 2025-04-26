@@ -33,7 +33,6 @@ class ExtractModView(QWidget):
             return
 
         file_path = Path(file_path)
-        # Cria a subpasta com o nome do arquivo (sem extensão)
         subfolder_name = file_path.stem
         final_dest = Path(dest_dir) / subfolder_name
         final_dest.mkdir(parents=True, exist_ok=True)

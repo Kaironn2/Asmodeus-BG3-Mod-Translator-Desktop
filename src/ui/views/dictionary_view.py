@@ -1,11 +1,16 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLineEdit, QListWidget, QLabel, QAbstractItemView, QHeaderView,
-    QStyledItemDelegate, QTextEdit,
+    QStyledItemDelegate, QTextEdit, QFileDialog, QMessageBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QTextOption
+
 from src.database.connection import get_session
 from src.database.repositories.dictionary_repository import DictionaryRepository
+from src.pipelines.dictionary_actions import DictionaryImportPipeline, DictionaryExportPipeline
+from src.ui.components.buttons import ActionButton
+from src.ui.components.progress import ImportProgressDialog
+from src.ui.components.pipeline_worker import PipelineWorker
 
 
 class TextEditDelegate(QStyledItemDelegate):
@@ -35,10 +40,16 @@ class DictionaryView(QWidget):
         left_layout = QVBoxLayout()
         right_layout = QVBoxLayout()
 
+        buttons_layout = QHBoxLayout()
+        self.import_button = ActionButton('Import', on_click=self.on_import_clicked)
+        self.export_button = ActionButton('Export', on_click=self.on_export_clicked)
+        buttons_layout.addWidget(self.import_button)
+        buttons_layout.addWidget(self.export_button)
+        left_layout.addLayout(buttons_layout)
+
         self.mods_list = QListWidget()
         self.mods_list.setFixedWidth(200)
         self.mods_list.itemClicked.connect(self.on_mod_selected)
-        left_layout.addWidget(QLabel('Mods'))
         left_layout.addWidget(self.mods_list)
 
         filter_layout = QHBoxLayout()
@@ -190,3 +201,52 @@ class DictionaryView(QWidget):
         self.table.setColumnWidth(2, 90)
         self.table.setColumnWidth(3, 90)
         self.table.setColumnWidth(4, 150)
+
+    def on_import_clicked(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            'Import Dictionary',
+            '',
+            'CSV/Excel Files (*.csv *.xlsx);;CSV Files (*.csv);;Excel Files (*.xlsx)'
+        )
+        if file_path:
+            self.progress_dialog = ImportProgressDialog(window_text='Importing Dictionary', text='Importing dictionary...')
+            pipeline = DictionaryImportPipeline(file_path=file_path)
+            self.worker = PipelineWorker(pipeline)
+            self.worker.finished.connect(self.on_import_finished)
+            self.worker.error.connect(self.on_import_error)
+            self.worker.start()
+            self.progress_dialog.exec()
+
+    def on_import_finished(self):
+        self.progress_dialog.accept()
+        self.load_mods()
+
+    def on_import_error(self, tb_str):
+        self.progress_dialog.reject()
+        QMessageBox.critical(self, 'Import error', tb_str)
+
+    def on_export_clicked(self):
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            'Exportar Dicionário',
+            '',
+            'CSV Files (*.csv);;Excel Files (*.xlsx)'
+        )
+        if file_path:
+            self.progress_dialog = ImportProgressDialog(window_text='Exporting dictionary', text='Exporting dictionary')
+            pipeline = DictionaryExportPipeline(file_path)
+            self.worker = PipelineWorker(pipeline)
+            self.worker.finished.connect(self.on_export_finished)
+            self.worker.error.connect(self.on_export_error)
+            self.worker.start()
+            self.progress_dialog.exec()
+
+    def on_export_finished(self):
+        self.progress_dialog.accept()
+        QMessageBox.information(self, 'Dictionary Export', 'Export finished!')
+
+    def on_export_error(self, tb_str):
+        self.progress_dialog.reject()
+        QMessageBox.critical(self, 'Error on export', tb_str)
+    
