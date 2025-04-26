@@ -14,6 +14,7 @@ from src.ui.views.extract_mod_view import ExtractModView
 from src.ui.views.translation.manual_view import ManualView
 from src.ui.views.translation.openai_view import OpenaiView
 from src.ui.views.translation.deepl_view import DeepLView
+from src.ui.views.dictionary.create_dictionary_view import CreateDictionaryView
 from src.ui.components.translation_topbar import TopNavBar
 from src.ui.components.sidebar import Sidebar
 
@@ -58,6 +59,7 @@ class Window(QMainWindow):
         translation_layout.addWidget(self.stacked)
 
         dictionaries_view = DictionaryView()
+        create_dictionary_view = CreateDictionaryView()
         extract_mod_view = ExtractModView()
         create_mod_package_view = CreateModPackageView()
         settings_view = QLabel('View: Settings - coming soon')
@@ -67,12 +69,13 @@ class Window(QMainWindow):
 
         self.central_stack.addWidget(self.translation_widget)  # index 0
         self.central_stack.addWidget(dictionaries_view)        # index 1
-        self.central_stack.addWidget(extract_mod_view)         # index 2
-        self.central_stack.addWidget(create_mod_package_view)  # index 3
-        self.central_stack.addWidget(settings_view)            # index 4
-        self.central_stack.addWidget(about_view)               # index 5
-        self.central_stack.addWidget(check_for_updates_view)   # index 6
-        self.central_stack.addWidget(buy_me_a_cofffe_view)     # index 7
+        self.central_stack.addWidget(create_dictionary_view)   # index 2
+        self.central_stack.addWidget(extract_mod_view)         # index 3
+        self.central_stack.addWidget(create_mod_package_view)  # index 4
+        self.central_stack.addWidget(settings_view)            # index 5
+        self.central_stack.addWidget(about_view)               # index 6
+        self.central_stack.addWidget(check_for_updates_view)   # index 7
+        self.central_stack.addWidget(buy_me_a_cofffe_view)     # index 8
 
         main_layout.addWidget(self.central_stack)
 
@@ -87,18 +90,20 @@ class Window(QMainWindow):
             self.central_stack.setCurrentIndex(0)
         elif key == 'dictionaries':
             self.central_stack.setCurrentIndex(1)
-        elif key == 'extract_mod':
+        elif key == 'create_dictionary':
             self.central_stack.setCurrentIndex(2)
-        elif key == 'create_mod_package':
+        elif key == 'extract_mod':
             self.central_stack.setCurrentIndex(3)
-        elif key == 'settings':
+        elif key == 'create_mod_package':
             self.central_stack.setCurrentIndex(4)
-        elif key == 'about':
+        elif key == 'settings':
             self.central_stack.setCurrentIndex(5)
-        elif key == 'check_for_updates':
+        elif key == 'about':
             self.central_stack.setCurrentIndex(6)
-        elif key == 'buy_me_a_coffee':
+        elif key == 'check_for_updates':
             self.central_stack.setCurrentIndex(7)
+        elif key == 'buy_me_a_coffee':
+            self.central_stack.setCurrentIndex(8)
 
     def select_view(self, key):
         for k, btn in getattr(self.top_nav, 'buttons', {}).items():

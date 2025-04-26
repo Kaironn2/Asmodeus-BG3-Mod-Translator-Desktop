@@ -20,3 +20,8 @@ class LanguageRepository:
     def get_all_language_names(session: Session) -> list[str]:
         statement = select(Language.name)
         return sorted(session.exec(statement).all())
+    
+    @staticmethod
+    def get_all_language_codes(session: Session) -> list[str]:
+        statement = select(Language.code)
+        return sorted(session.exec(statement).all())

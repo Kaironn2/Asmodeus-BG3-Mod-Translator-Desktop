@@ -193,3 +193,19 @@ class DictionaryRepository:
             }
             for entry in results
         ]
+
+    @classmethod
+    def get_all_data(cls, session: Session,) -> list[dict]:
+        statement = select(Dictionary)
+        results = session.exec(statement).all()
+        return [
+            {
+                'text_language1': entry.text_language1,
+                'text_language2': entry.text_language2,
+                'uid': entry.uid,
+                'language1': entry.language1,
+                'language2': entry.language2,
+                'mod_name': entry.mod_name,
+            }
+            for entry in results
+        ]

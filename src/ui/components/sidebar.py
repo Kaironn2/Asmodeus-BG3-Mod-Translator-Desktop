@@ -22,6 +22,7 @@ class Sidebar(QWidget):
             options=[
                 ('Translate', 'translate', resource_path('src/ui/assets/translation_blue_icon.ico')),
                 ('Dictionaries', 'dictionaries', resource_path('src/ui/assets/dictionary_icon_blue.ico')),
+                ('Create Dictionary', 'create_dictionary', resource_path('src/ui/assets/dictionary_icon_blue.ico')),
             ]
         )
         self._add_separator()
