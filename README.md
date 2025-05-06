@@ -1,6 +1,6 @@
 # 🎮 BG3 Mod Translator - Desktop App
 
-## 🇮🇹 English
+## English
 
 ### 📟 Short Description
 
@@ -40,7 +40,7 @@ LSLib is an open-source project licensed under the MIT License.
 
 ---
 
-## 🇧🇷 Português
+## Português
 
 ### 📟 Descrição Curta
 
